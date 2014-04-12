@@ -24,13 +24,12 @@ public class HtmlTree extends JFrame{
     private	JScrollPane     scrollPane;
     
     public HtmlTree()
-    {       
-            // Set the frame characteristics
+    {
             setTitle( "Simple Tree Application" );
             setSize( 300, 100 );
             setBackground( Color.gray );
 
-            // Create a panel to hold all other components
+            // Create top level container
             topPanel = new JPanel();
             topPanel.setLayout( new BorderLayout() );
             getContentPane().add( topPanel );
@@ -49,18 +48,18 @@ public class HtmlTree extends JFrame{
 
     public static void main(String[] args) {
         HtmlTree root	= new HtmlTree();
-        
         try{
-            Connect("http://nothing.com");
+            BuildTree("http://nothing.com");
         } catch (Exception e) {
             System.out.println("That website doesn't work!");
         }
+        
         
         root.setVisible( true );
         
     }
     
-    public static void Connect(String link) throws Exception {
+    public static void BuildTree(String link) throws Exception {
         URL url = new URL(link);
         URLConnection c = url.openConnection();
         

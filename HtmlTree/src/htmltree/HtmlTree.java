@@ -25,7 +25,7 @@ public class HtmlTree extends JFrame{
     
     public HtmlTree()
     {
-            setTitle( "Simple Tree Application" );
+            setTitle( "Sample Tree Application" );
             setSize( 300, 100 );
             setBackground( Color.gray );
 
@@ -49,7 +49,7 @@ public class HtmlTree extends JFrame{
     public static void main(String[] args) {
         HtmlTree root	= new HtmlTree();
         try{
-            BuildTree("http://nothing.com");
+            BuildTree("http://nothing.com", root);
         } catch (Exception e) {
             System.out.println("That website doesn't work!");
         }
@@ -59,20 +59,27 @@ public class HtmlTree extends JFrame{
         
     }
     
-    public static void BuildTree(String link) throws Exception {
+    public static void BuildTree(String link, HtmlTree root) throws Exception {
         URL url = new URL(link);
         URLConnection c = url.openConnection();
         
         c.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 5.5; Windows NT 5.0; H010818)");
         BufferedReader in = new BufferedReader(new InputStreamReader(c.getInputStream()));
         String strLine = "";
-        
         while ((strLine = in.readLine()) != null) {
-            if (!strLine.equals("")) System.out.println(strLine);
+                if (!strLine.equals("")) {
+                    /* 
+                        Test if it has '<'
+                            if so, is it "</"?
+                                if so
+                        
+                    
+                    */ 
+                    
+                    
+                    
+                    
+                }
+            }
         }
     }
-
-    
-
-    
-}

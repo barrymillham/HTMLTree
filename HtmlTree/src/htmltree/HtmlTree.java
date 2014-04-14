@@ -10,7 +10,6 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
 
 /**
@@ -19,28 +18,48 @@ import javax.swing.*;
  */
 public class HtmlTree extends JFrame{
     
-    private	JPanel		topPanel;
-    private	JTree		tree;
-    private	JScrollPane     scrollPane;
+    private             HtmlTreePanel	thePanel;
+    private static	JTree		tree;
+    private             JScrollPane     miniTreeView;
+    private             JScrollPane     scrollFrame;
     
     public HtmlTree()
     {
-            setTitle( "Sample Tree Application" );
-            setSize( 300, 100 );
+            Point DEFAULTBASE = new Point(50,50);
+            final int DEFAULTWIDTH = 1200, DEFAULTHEIGHT = 700; 
+            setTitle( "HTML Tree" );
             setBackground( Color.gray );
+            setBounds(DEFAULTBASE.x,DEFAULTBASE.y,DEFAULTWIDTH,DEFAULTHEIGHT);
 
-            // Create top level container
-            topPanel = new JPanel();
-            topPanel.setLayout( new BorderLayout() );
-            getContentPane().add( topPanel );
-
+            
             // Create a new tree control
             tree = new JTree();
+            
+            // Create the primary view
+            thePanel = new HtmlTreePanel();
+            scrollFrame = new JScrollPane(thePanel);
+            thePanel.setPreferredSize(new Dimension(3000, 2000));
+            scrollFrame.setPreferredSize(new Dimension(3000, 2000));
+            scrollFrame.getHorizontalScrollBar().setValue(550);
+            getContentPane().add(scrollFrame);
+            
+            
+            // Create the mini tree view
+            miniTreeView = new JScrollPane(tree);
+            miniTreeView.setPreferredSize(new Dimension(200, 100));
+            getContentPane().add(miniTreeView, BorderLayout.WEST);
+            
+            // Create top level container
+            //topPanel = new JPanel();
+            //topPanel.setLayout( new BorderLayout() );
+            //getContentPane().add( topPanel );
+
+            
 
             // Add the listbox to a scrolling pane
-            scrollPane = new JScrollPane();
-            scrollPane.getViewport().add( tree );
-            topPanel.add( scrollPane, BorderLayout.CENTER );
+            //scrollPane = new JScrollPane();
+            //scrollPane.getViewport().add( tree );
+            //topPanel.add( scrollPane, BorderLayout.CENTER );
             
             this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
            

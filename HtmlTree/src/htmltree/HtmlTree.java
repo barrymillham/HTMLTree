@@ -21,7 +21,7 @@ public class HtmlTree extends JFrame{
     private             HtmlTreePanel	thePanel;
     private static	JTree		tree;
     private             JScrollPane     miniTreeView;
-    private             JScrollPane     scrollFrame;
+    private static      JScrollPane     scrollFrame;
     
     public HtmlTree()
     {
@@ -39,8 +39,6 @@ public class HtmlTree extends JFrame{
             thePanel = new HtmlTreePanel();
             scrollFrame = new JScrollPane(thePanel);
             thePanel.setPreferredSize(new Dimension(3000, 2000));
-            scrollFrame.setPreferredSize(new Dimension(3000, 2000));
-            scrollFrame.getHorizontalScrollBar().setValue(550);
             getContentPane().add(scrollFrame);
             
             
@@ -75,6 +73,7 @@ public class HtmlTree extends JFrame{
         
         
         root.setVisible( true );
+        scrollFrame.getHorizontalScrollBar().setValue(1000);
         
     }
     

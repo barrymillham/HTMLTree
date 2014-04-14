@@ -16,7 +16,7 @@ public class HtmlTreePanel extends JPanel{
      int nodeWidth = 70;
      int nodeHorizSpacing = 80;
      int nodeVertSpacing = 120;
-     int rootX = 1000;
+     int rootX = 1500;
      int rootY = 10;
      
      JTree theTree;

@@ -1,68 +1,74 @@
-
+/*
 package htmltree;
 
+import htmltree.HtmlTree.AdapterNode;
+import htmltree.HtmlTree.DomToTreeModelAdapter;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.util.Enumeration;
 import javax.swing.JPanel;
 import javax.swing.JTree;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreeModel;
 
 
 public class HtmlTreePanel extends JPanel{
     
      int nodeHeight = 20;
-     int nodeWidth = 70;
+     int nodeWidth = 100;
      int nodeHorizSpacing = 80;
      int nodeVertSpacing = 120;
      int rootX = 1500;
      int rootY = 10;
      
      JTree theTree;
-     TreeModel theTreeModel;
+     //TreeModel theTreeModel;
      
      public void setTree(JTree t) {
          theTree = t;
-         theTreeModel = t.getModel();
+         //theTreeModel = t.getModel();
      }
      
      public HtmlTreePanel(JTree t) {
          theTree = t;
-         theTreeModel = t.getModel();
-     }
+         //theTreeModel = t.getModel();
+     } 
      
      public HtmlTreePanel() {
          theTree = new JTree();
-         theTreeModel = theTree.getModel();
+         //theTreeModel = theTree.getModel();
      }
-    
+     
      public void paint(Graphics g) {
         super.paint(g);
         
         int[] rowCount = new int[100];
         for (int i = 0; i < 100; i++) rowCount[i] = 0;
         
-        DefaultMutableTreeNode theNode = null;
-        DefaultMutableTreeNode theRoot = (DefaultMutableTreeNode)theTreeModel.getRoot();
+        AdapterNode theNode = null;
+        AdapterNode theRoot = (AdapterNode)theTree.getModel().getRoot();
+        
+        
         for (Enumeration e = theRoot.depthFirstEnumeration(); e.hasMoreElements() && theNode == null;) {
-            DefaultMutableTreeNode node = (DefaultMutableTreeNode) e.nextElement();
+            AdapterNode node = (AdapterNode) e.nextElement();
             rowCount[node.getLevel()]++;
+            System.out.println("this node has " + node.getChildCount() + " children.");
         }
         
-        //for (int i = 0; rowCount[i] != 0; i++)
-        //    System.out.println("row " + i + " has " + rowCount[i]);
+       
+        
+        
+        for (int i = 0; rowCount[i] != 0; i++)
+            System.out.println("row " + i + " has " + rowCount[i]);
         
         
         int[] rowIndex = new int[100];
         for (int i = 0; i < 100; i++) rowIndex[i] = 0;
-       
-        DefaultMutableTreeNode root = (DefaultMutableTreeNode)theTreeModel.getRoot();
+        DomToTreeModelAdapter dttma = (DomToTreeModelAdapter) theTree.getModel();
+        AdapterNode root = (AdapterNode)dttma.getRoot();
         Enumeration en = root.depthFirstEnumeration();
         while (en.hasMoreElements()) {
 
-          DefaultMutableTreeNode node = (DefaultMutableTreeNode) en.nextElement();
-          DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
+          AdapterNode node = (AdapterNode) en.nextElement();
+          AdapterNode parentNode = (AdapterNode) node.getParent();
        
           if (parentNode == null)
             paintNode(g, rootX - (rowCount[node.getLevel()]/2 - rowIndex[node.getLevel()]) * nodeHorizSpacing, rootY + node.getLevel() * nodeVertSpacing, node.toString(), 
@@ -70,8 +76,6 @@ public class HtmlTreePanel extends JPanel{
           else
             paintNode(g, rootX - (rowCount[node.getLevel()]/2 - rowIndex[node.getLevel()]) * nodeHorizSpacing, rootY + node.getLevel() * nodeVertSpacing, node.toString(),
                          rootX - (rowCount[parentNode.getLevel()]/2 - rowIndex[parentNode.getLevel()]) * nodeHorizSpacing, rootY + parentNode.getLevel() * nodeVertSpacing);
-          
-         //System.out.println("drawing line from " + (rowCount[node.getLevel()]/2 - rowIndex[node.getLevel()] * nodeHorizSpacing) + ", " + (rootY + node.getLevel() * nodeVertSpacing) + " to " + (rootX - (rowCount[parentNode.getLevel()]/2 - rowIndex[parentNode.getLevel()]) * nodeHorizSpacing) + ", " + rootY + parentNode.getLevel() * nodeVertSpacing);
           
           rowIndex[node.getLevel()]++;
         }  
@@ -143,3 +147,4 @@ public class HtmlTreePanel extends JPanel{
      }
     
 }
+ */

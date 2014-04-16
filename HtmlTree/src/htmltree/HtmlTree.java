@@ -1,103 +1,488 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package htmltree;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+import java.io.IOException;
+import org.w3c.dom.Document;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTree;
+import javax.swing.JSplitPane;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Toolkit;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowAdapter;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
-import java.awt.*;
-import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.CompoundBorder;
+import javax.swing.tree.*;
+import javax.swing.event.*;
+import java.util.*;
 
-/**
- *
- * @author MARTJA1
- */
-public class HtmlTree extends JFrame{
-    
-    private             HtmlTreePanel	thePanel;
-    private static	JTree		tree;
-    private             JScrollPane     miniTreeView;
-    private static      JScrollPane     scrollFrame;
-    
-    public HtmlTree()
-    {
-            Point DEFAULTBASE = new Point(50,50);
-            final int DEFAULTWIDTH = 1200, DEFAULTHEIGHT = 700; 
-            setTitle( "HTML Tree" );
-            setBackground( Color.gray );
-            setBounds(DEFAULTBASE.x,DEFAULTBASE.y,DEFAULTWIDTH,DEFAULTHEIGHT);
+public class HtmlTree extends JPanel {
 
-            
-            // Create a new tree control
-            tree = new JTree();
-            
-            // Create the primary view
-            thePanel = new HtmlTreePanel();
-            scrollFrame = new JScrollPane(thePanel);
-            thePanel.setPreferredSize(new Dimension(3000, 2000));
-            getContentPane().add(scrollFrame);
-            
-            
-            // Create the mini tree view
-            miniTreeView = new JScrollPane(tree);
-            miniTreeView.setPreferredSize(new Dimension(200, 100));
-            getContentPane().add(miniTreeView, BorderLayout.WEST);
-            
-            // Create top level container
-            //topPanel = new JPanel();
-            //topPanel.setLayout( new BorderLayout() );
-            //getContentPane().add( topPanel );
+    static Document document;
+    static final int windowHeight = 700;
+    static final int leftWidth = 200;
+    static final int rightWidth = 1000;
+    static final int windowWidth = leftWidth + rightWidth;
+    static JTree tree;
+    static JScrollPane htmlView;
 
-            
+    static final String[] typeName
+            = {"none", "Element", "Attr", "Text", "CDATA", "EntityRef", "Entity",
+                "ProcInstr", "Comment", "Document", "DocType", "DocFragment", "Notation",};
 
-            // Add the listbox to a scrolling pane
-            //scrollPane = new JScrollPane();
-            //scrollPane.getViewport().add( tree );
-            //topPanel.add( scrollPane, BorderLayout.CENTER );
-            
-            this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-           
-    }
+    public HtmlTree() {
 
-    public static void main(String[] args) {
-        HtmlTree root	= new HtmlTree();
-        try{
-            BuildTree("http://nothing.com", root);
-        } catch (Exception e) {
-            System.out.println("That website doesn't work!");
+        // Make a nice border
+        EmptyBorder eb = new EmptyBorder(5, 5, 5, 5);
+        BevelBorder bb = new BevelBorder(BevelBorder.LOWERED);
+        CompoundBorder cb = new CompoundBorder(eb, bb);
+        this.setBorder(new CompoundBorder(cb, eb));
+
+        // Set up the tree
+        tree = new JTree(new DomToTreeModelAdapter());
+
+        // Iterate over the tree and make nodes visible
+        // (Otherwise, the tree shows up fully collapsed)
+        JScrollPane treeView = new JScrollPane(tree);
+        treeView.setPreferredSize(new Dimension(leftWidth, windowHeight));
+
+        // Build right-side view
+        //JPanel htmlPane = new JPanel();
+        //JScrollPane htmlView = new JScrollPane(htmlPane);
+        //htmlView.setPreferredSize(new Dimension(rightWidth, windowHeight));
+        
+        HtmlTreePanel htmlPane = new HtmlTreePanel(tree);
+        htmlPane.setPreferredSize(new Dimension(3000, 2000));
+        htmlView = new JScrollPane(htmlPane);
+        htmlView.setPreferredSize(new Dimension(rightWidth, windowHeight));
+
+        // Build split-pane view
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, treeView, htmlView);
+        splitPane.setContinuousLayout(true);
+        splitPane.setDividerLocation(leftWidth);
+        splitPane.setPreferredSize(new Dimension(windowWidth + 10, windowHeight + 10));
+
+        // Add GUI components
+        this.setLayout(new BorderLayout());
+        this.add("Center", splitPane);
+    } // constructor
+
+    public static void main(String[] argv) throws Exception {
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
+        try {
+            DocumentBuilder builder = factory.newDocumentBuilder();
+
+            //After searching for about a half hour, these are the only two websites I could find that work.
+            //The website needs to be 100% valid strict XML, 0 mistakes, 0 warnings. Very few sites out there are.
+            String documentString = buildDocumentString("http://basement.com");
+            //String documentString = buildDocumentString("http://w3.org/");
+
+            InputStream stream = new ByteArrayInputStream(documentString.getBytes("UTF-8"));
+            document = builder.parse(new File("C:\\Users\\HALVORSENNS1\\Desktop\\fun.html"));
+            //document = builder.parse(stream);
+
+            makeFrame();
+
+        } catch (SAXParseException spe) {
+            // Error generated by the parser
+            System.out.println("\n** Parsing error" + ", line " + spe.getLineNumber() + ", uri " + spe.getSystemId());
+            System.out.println("   " + spe.getMessage());
+            Exception x = spe;
+
+            if (spe.getException() != null) {
+                x = spe.getException();
+            }
+
+            x.printStackTrace();
+        } catch (SAXException sxe) {
+            Exception x = sxe;
+            if (sxe.getException() != null) {
+                x = sxe.getException();
+            }
+
+            x.printStackTrace();
+        } catch (ParserConfigurationException pce) {
+            // Parser with specified options can't be built
+            pce.printStackTrace();
+        } catch (IOException ioe) {
+            // I/O error
+            ioe.printStackTrace();
         }
-        
-        
-        root.setVisible( true );
-        scrollFrame.getHorizontalScrollBar().setValue(1000);
-        
-    }
-    
-    public static void BuildTree(String link, HtmlTree root) throws Exception {
+    } // main
+
+    public static String buildDocumentString(String link) throws Exception {
+        String content = "";
         URL url = new URL(link);
         URLConnection c = url.openConnection();
-        
+
         c.setRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 5.5; Windows NT 5.0; H010818)");
         BufferedReader in = new BufferedReader(new InputStreamReader(c.getInputStream()));
         String strLine = "";
         while ((strLine = in.readLine()) != null) {
-                if (!strLine.equals("")) {
-                    /* 
-                        Test if it has '<'
-                            if so, is it "</"?
-                                if so
-                        
-                    
-                    */ 
-                    
-                    
-                    
-                    
+            content += strLine;
+        }
+        return content;
+    }
+
+    public static void makeFrame() {
+        // Set up a GUI framework
+        JFrame frame = new JFrame("DOM Echo");
+        frame.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                System.exit(0);
+            }
+        });
+
+        // Set up the tree, the views, and display it all
+        final HtmlTree echoPanel = new HtmlTree();
+        frame.getContentPane().add("Center", echoPanel);
+        frame.pack();
+
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int w = windowWidth + 10;
+        int h = windowHeight + 10;
+        frame.setLocation((screenSize.width / 3) - (w / 2),
+                (screenSize.height / 2) - (h / 2));
+        frame.setSize(w, h);
+        
+        htmlView.getHorizontalScrollBar().setValue(1000);
+        
+        frame.setVisible(true);
+    }
+
+    // This class wraps a DOM node and returns the text we want to display in the tree. 
+    public class AdapterNode extends DefaultMutableTreeNode {
+
+        org.w3c.dom.Node domNode;
+
+        public AdapterNode(org.w3c.dom.Node node) {
+            domNode = node;
+        }
+
+        // Return a string that identifies this node in the tree
+        public String toString() {
+            String s = typeName[domNode.getNodeType()];
+            String nodeName = domNode.getNodeName();
+
+            if (!nodeName.startsWith("#")) {
+                s += (": " + nodeName);
+            }
+
+            if (domNode.getNodeValue() != null) {
+                if (s.startsWith("ProcInstr")) {
+                    s += ", ";
+                } else {
+                    s += ": ";
                 }
+
+                // Trim the value to get rid of NL's at the front
+                String t = domNode.getNodeValue().trim();
+                int x = t.indexOf("\n");
+
+                if (x >= 0) {
+                    t = t.substring(0, x);
+                }
+                s += t;
+            }
+            return s;
+        }
+
+        public int index(AdapterNode child) {
+            int count = childCount();
+
+            for (int i = 0; i < count; i++) {
+                AdapterNode n = this.child(i);
+
+                if (child.domNode == n.domNode) {
+                    return i;
+                }
+
+            }
+            return -1; // Should never get here.
+        }
+
+        public AdapterNode child(int searchIndex) {
+            //Note: JTree index is zero-based. 
+            org.w3c.dom.Node node = domNode.getChildNodes().item(searchIndex);
+
+            return new AdapterNode(node);
+        }
+
+        public int childCount() {
+            return domNode.getChildNodes().getLength();
+        }
+    }
+
+    // This adapter converts the current Document (a DOM) into a JTree model. 
+    public class DomToTreeModelAdapter implements javax.swing.tree.TreeModel {
+
+        private Vector listenerList = new Vector();
+
+        public Object getRoot() {
+            return new AdapterNode(document);
+        }
+
+        public boolean isLeaf(Object aNode) {
+            // Determines whether the littl lead icon thing shows up to the left.
+            // Return true for any node with no children
+            AdapterNode node = (AdapterNode) aNode;
+
+            if (node.childCount() > 0) {
+                return false;
+            }
+
+            return true;
+        }
+
+        public int getChildCount(Object parent) {
+            AdapterNode node = (AdapterNode) parent;
+            return node.childCount();
+        }
+
+        public Object getChild(Object parent, int index) {
+            AdapterNode node = (AdapterNode) parent;
+            return node.child(index);
+        }
+
+        public int getIndexOfChild(Object parent, Object child) {
+            AdapterNode node = (AdapterNode) parent;
+            return node.index((AdapterNode) child);
+        }
+
+        public void valueForPathChanged(TreePath path, Object newValue) {
+            // We want to ensure the new value is really new,
+            // adjust the model, and then fire a TreeNodesChanged event.
+        }
+
+        public void addTreeModelListener(TreeModelListener listener) {
+            if ((listener != null) && !listenerList.contains(listener)) {
+                listenerList.addElement(listener);
+            }
+        }
+
+        public void removeTreeModelListener(TreeModelListener listener) {
+            if (listener != null) {
+                listenerList.removeElement(listener);
+            }
+        }
+
+        public void fireTreeNodesChanged(TreeModelEvent e) {
+
+            Enumeration listeners = listenerList.elements();
+            while (listeners.hasMoreElements()) {
+                TreeModelListener listener = (TreeModelListener) listeners.nextElement();
+                listener.treeNodesChanged(e);
+            }
+        }
+
+        public void fireTreeNodesInserted(TreeModelEvent e) {
+            Enumeration listeners = listenerList.elements();
+
+            while (listeners.hasMoreElements()) {
+                TreeModelListener listener = (TreeModelListener) listeners.nextElement();
+                listener.treeNodesInserted(e);
+            }
+        }
+
+        public void fireTreeNodesRemoved(TreeModelEvent e) {
+            Enumeration listeners = listenerList.elements();
+
+            while (listeners.hasMoreElements()) {
+                TreeModelListener listener = (TreeModelListener) listeners.nextElement();
+                listener.treeNodesRemoved(e);
+            }
+        }
+
+        public void fireTreeStructureChanged(TreeModelEvent e) {
+            Enumeration listeners = listenerList.elements();
+
+            while (listeners.hasMoreElements()) {
+                TreeModelListener listener = (TreeModelListener) listeners.nextElement();
+                listener.treeStructureChanged(e);
             }
         }
     }
+
+    public class HtmlTreePanel extends JPanel {
+
+        int nodeHeight = 20;
+        int nodeWidth = 120;
+        int nodeHorizSpacing = 130;
+        int nodeVertSpacing = 120;
+        int rootX = 1450;
+        int rootY = 10;
+        int[] rowCount = new int[100];
+        int level = -1;
+        int[] rowIndex = new int[100];
+
+        JTree theTree;
+        //TreeModel theTreeModel;
+
+        public void setTree(JTree t) {
+        }
+
+        public HtmlTreePanel(JTree t) {
+        }
+
+        public HtmlTreePanel() {
+        }
+
+        public void paint(Graphics g) {
+            super.paint(g);
+
+           
+
+            AdapterNode theNode = null;
+            AdapterNode theRoot = (AdapterNode) tree.getModel().getRoot();
+            
+           int dismal = ((AdapterNode)(tree.getModel().getRoot())).childCount();
+           //System.out.println("dismal = " + dismal);
+
+           System.out.println(theRoot.child(0));
+           
+            /*for (Enumeration e = theRoot.depthFirstEnumeration(); e.hasMoreElements() && theNode == null;) {
+                AdapterNode node = (AdapterNode) e.nextElement();
+                rowCount[node.getLevel()]++;
+                System.out.println("this node has " + node.childCount() + " children.");
+            }
+
+            for (int i = 0; rowCount[i] != 0; i++) {
+                System.out.println("row " + i + " has " + rowCount[i]);
+            }*/
+
+            for (int i = 0; i < 100; i++)
+                rowIndex[i] = 0;
+            
+            for (int i = 0; i < 100; i++)
+                rowCount[i] = 0;
+            
+            countAllNodes(theRoot);
+            
+            for (int i = 0; rowCount[i] > 0; i++) 
+                System.out.println("row " + i + " has " + rowCount[i]);
+       
+            level = -1;
+            
+            paintAllNodes(g, theRoot);
+            
+                
+            //while (    ) {
+
+               /* AdapterNode node = (AdapterNode) en.nextElement();
+                AdapterNode parentNode = (AdapterNode) node.getParent();
+
+                if (parentNode == null) {
+                    paintNode(g, rootX - (rowCount[node.getLevel()] / 2 - rowIndex[node.getLevel()]) * nodeHorizSpacing, rootY + node.getLevel() * nodeVertSpacing, node.toString(),
+                            rootX - (rowCount[node.getLevel()] / 2 - rowIndex[node.getLevel()]) * nodeHorizSpacing, rootY + node.getLevel() * nodeVertSpacing - nodeHeight);
+                } else {
+                    paintNode(g, rootX - (rowCount[node.getLevel()] / 2 - rowIndex[node.getLevel()]) * nodeHorizSpacing, rootY + node.getLevel() * nodeVertSpacing, node.toString(),
+                            rootX - (rowCount[parentNode.getLevel()] / 2 - rowIndex[parentNode.getLevel()]) * nodeHorizSpacing, rootY + parentNode.getLevel() * nodeVertSpacing);
+                }
+
+                rowIndex[node.getLevel()]++;*/
+           // }
+
+        }
+        
+        public void countAllNodes(AdapterNode root) {
+            level++;
+            for (int i = 0; i < root.childCount(); i++)
+                countAllNodes(root.child(i));
+            rowCount[level]++;
+            level--;
+        }
+        
+        
+       public void paintAllNodes(Graphics g, AdapterNode parent) {
+           level++;
+            for (int i = 0; i < parent.childCount(); i++)
+                paintAllNodes(g, parent.child(i));
+            if (level > 0)
+             paintNode(g, rootX - (rowCount[level] / 2 - rowIndex[level]) * nodeHorizSpacing, rootY + level * nodeVertSpacing, parent.toString(),
+                            rootX - (rowCount[level - 1] / 2 - rowIndex[level - 1]) * nodeHorizSpacing, rootY + (level - 1) * nodeVertSpacing);
+            else
+             paintNode(g, rootX - (rowCount[level] / 2 - rowIndex[level]) * nodeHorizSpacing, rootY + level * nodeVertSpacing, parent.toString(),
+                            rootX - (rowCount[level] / 2 - rowIndex[level]) * nodeHorizSpacing, rootY + (level - 1) * nodeVertSpacing - nodeHeight);
+                
+            rowIndex[level]++;
+            level--;     
+        }
+
+        public void paintNode(Graphics g, int x, int y, String text, int parentX, int parentY) {
+            int[] xCoords = {0, nodeWidth * 1 / 8, nodeWidth * 7 / 8, nodeWidth, nodeWidth * 7 / 8, nodeWidth * 1 / 8};
+            int[] yCoords = {nodeHeight * 1 / 2, 0, 0, nodeHeight * 1 / 2, nodeHeight, nodeHeight};
+            int numPoints = 6;
+
+            for (int i = 0; i < numPoints; i++) {
+                xCoords[i] += x - nodeWidth * 1 / 8;
+                yCoords[i] += y;
+            }
+
+            g.setColor(randColor(text));
+            g.fillPolygon(xCoords, yCoords, numPoints);
+
+            xCoords[0] += 2;
+            xCoords[1] += 1;
+            xCoords[2] -= 1;
+            xCoords[3] -= 2;
+            xCoords[4] -= 1;
+            xCoords[5] += 1;
+            yCoords[1] += 2;
+            yCoords[2] += 2;
+            yCoords[4] -= 2;
+            yCoords[5] -= 2;
+
+            g.setColor(randColor(text).brighter());
+            g.fillPolygon(xCoords, yCoords, numPoints);
+
+            g.setColor(Color.WHITE);
+            g.drawString(text, x + 5, y + 14);
+
+            g.setColor(Color.BLACK);
+            g.drawLine(x + nodeWidth * 3 / 8, y, parentX + nodeWidth * 3 / 8, parentY + nodeHeight);
+        }
+
+        public Color randColor(String text) { // generates a random color given a word as a seed 
+            int r = 0;
+            int g = 0;
+            int b = 0;
+
+            for (int i = 0; i < text.length(); i++) {
+                r += (int) text.charAt(0);
+                g += (int) text.charAt(i);
+                b += .8 * (int) text.charAt(i);
+            }
+
+            r %= 100;
+            r += 50;
+            g %= 100;
+            g += 50;
+            b %= 100;
+            b += 50;
+
+            Color x = new Color(r, g, b);
+            return x;
+        }
+
+    }
+
+}

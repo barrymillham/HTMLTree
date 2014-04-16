@@ -15,7 +15,9 @@ import javax.swing.JSplitPane;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.TextField;
 import java.awt.Toolkit;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowAdapter;
@@ -42,6 +44,7 @@ public class HtmlTree extends JPanel {
     static final int windowWidth = leftWidth + rightWidth;
     static JTree tree;
     static JScrollPane htmlView;
+    static HtmlTreePanel htmlPane;
 
     static final String[] typeName
             = {"none", "Element", "Attr", "Text", "CDATA", "EntityRef", "Entity",
@@ -64,12 +67,12 @@ public class HtmlTree extends JPanel {
         treeView.setPreferredSize(new Dimension(leftWidth, windowHeight));
 
         // Build right-side view
-        //JPanel htmlPane = new JPanel();
-        //JScrollPane htmlView = new JScrollPane(htmlPane);
-        //htmlView.setPreferredSize(new Dimension(rightWidth, windowHeight));
+        htmlPane = new HtmlTreePanel(tree);
+        TextField tf = new TextField("Courier New");
         
-        HtmlTreePanel htmlPane = new HtmlTreePanel(tree);
         htmlPane.setPreferredSize(new Dimension(3000, 2000));
+        Font f = new Font("Courier New", Font.PLAIN, 15);
+        htmlPane.setFont(f);
         htmlView = new JScrollPane(htmlPane);
         htmlView.setPreferredSize(new Dimension(rightWidth, windowHeight));
 
@@ -183,9 +186,9 @@ public class HtmlTree extends JPanel {
             String s = typeName[domNode.getNodeType()];
             String nodeName = domNode.getNodeName();
 
-            if (!nodeName.startsWith("#")) {
-                s += (": " + nodeName);
-            }
+            if (!nodeName.startsWith("#"))
+                s = (nodeName);
+            
 
             if (domNode.getNodeValue() != null) {
                 if (s.startsWith("ProcInstr")) {
@@ -198,9 +201,9 @@ public class HtmlTree extends JPanel {
                 String t = domNode.getNodeValue().trim();
                 int x = t.indexOf("\n");
 
-                if (x >= 0) {
+                if (x >= 0) 
                     t = t.substring(0, x);
-                }
+                
                 s += t;
             }
             return s;
@@ -285,6 +288,10 @@ public class HtmlTree extends JPanel {
             }
         }
 
+        
+        
+        
+        //CHRISTIAN USE THESE FUNCTIONS IF YOU WOULD LIKE
         public void fireTreeNodesChanged(TreeModelEvent e) {
 
             Enumeration listeners = listenerList.elements();
@@ -383,39 +390,29 @@ public class HtmlTree extends JPanel {
             level = -1;
             
             paintAllNodes(g, theRoot);
-            
-                
-            //while (    ) {
-
-               /* AdapterNode node = (AdapterNode) en.nextElement();
-                AdapterNode parentNode = (AdapterNode) node.getParent();
-
-                if (parentNode == null) {
-                    paintNode(g, rootX - (rowCount[node.getLevel()] / 2 - rowIndex[node.getLevel()]) * nodeHorizSpacing, rootY + node.getLevel() * nodeVertSpacing, node.toString(),
-                            rootX - (rowCount[node.getLevel()] / 2 - rowIndex[node.getLevel()]) * nodeHorizSpacing, rootY + node.getLevel() * nodeVertSpacing - nodeHeight);
-                } else {
-                    paintNode(g, rootX - (rowCount[node.getLevel()] / 2 - rowIndex[node.getLevel()]) * nodeHorizSpacing, rootY + node.getLevel() * nodeVertSpacing, node.toString(),
-                            rootX - (rowCount[parentNode.getLevel()] / 2 - rowIndex[parentNode.getLevel()]) * nodeHorizSpacing, rootY + parentNode.getLevel() * nodeVertSpacing);
-                }
-
-                rowIndex[node.getLevel()]++;*/
-           // }
-
         }
         
         public void countAllNodes(AdapterNode root) {
+            if (root.toString().equals("Text: ")) return;
             level++;
-            for (int i = 0; i < root.childCount(); i++)
+            
+            for (int i = 0; i < root.childCount(); i++) 
                 countAllNodes(root.child(i));
+            
             rowCount[level]++;
             level--;
         }
         
         
        public void paintAllNodes(Graphics g, AdapterNode parent) {
-           level++;
-            for (int i = 0; i < parent.childCount(); i++)
+           //If this next line is missing, the tree will contain a bunch of blank Text: nodes (The ones that are displayed
+           //in the left pane. For some reason, the parser likes to add blank Text nodes every time there is an open/close tag
+           //with no text between the two tags.
+           if (parent.toString().equals("Text: ")) return;
+            level++;
+            for (int i = 0; i < parent.childCount(); i++) 
                 paintAllNodes(g, parent.child(i));
+            
             if (level > 0)
              paintNode(g, rootX - (rowCount[level] / 2 - rowIndex[level]) * nodeHorizSpacing, rootY + level * nodeVertSpacing, parent.toString(),
                             rootX - (rowCount[level - 1] / 2 - rowIndex[level - 1]) * nodeHorizSpacing, rootY + (level - 1) * nodeVertSpacing);
@@ -428,12 +425,18 @@ public class HtmlTree extends JPanel {
         }
 
         public void paintNode(Graphics g, int x, int y, String text, int parentX, int parentY) {
-            int[] xCoords = {0, nodeWidth * 1 / 8, nodeWidth * 7 / 8, nodeWidth, nodeWidth * 7 / 8, nodeWidth * 1 / 8};
+            int modifiedWidth = 0;
+            if (text.length() > 15) 
+                modifiedWidth = nodeWidth + 12;
+            
+            else modifiedWidth = nodeWidth;
+            int[] xCoords = {0, modifiedWidth * 1 / 8, modifiedWidth * 7 / 8, modifiedWidth, modifiedWidth * 7 / 8, modifiedWidth * 1 / 8};
             int[] yCoords = {nodeHeight * 1 / 2, 0, 0, nodeHeight * 1 / 2, nodeHeight, nodeHeight};
+            
             int numPoints = 6;
 
             for (int i = 0; i < numPoints; i++) {
-                xCoords[i] += x - nodeWidth * 1 / 8;
+                xCoords[i] += x - modifiedWidth * 1 / 8;
                 yCoords[i] += y;
             }
 
@@ -458,7 +461,7 @@ public class HtmlTree extends JPanel {
             g.drawString(text, x + 5, y + 14);
 
             g.setColor(Color.BLACK);
-            g.drawLine(x + nodeWidth * 3 / 8, y, parentX + nodeWidth * 3 / 8, parentY + nodeHeight);
+            g.drawLine(x + modifiedWidth * 3 / 8, y, parentX + modifiedWidth * 3 / 8, parentY + nodeHeight);
         }
 
         public Color randColor(String text) { // generates a random color given a word as a seed 

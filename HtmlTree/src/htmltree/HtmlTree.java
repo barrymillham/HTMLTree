@@ -8,6 +8,8 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.TextField;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
@@ -88,11 +90,36 @@ public class HtmlTree extends JPanel {
         this.setLayout(new BorderLayout());
         this.add("Center", splitPane);
         
-        //Add buttons to splitPane
+        //Button panel
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
-        buttonPanel.add(new JButton("Add node"));
-        buttonPanel.add(new JButton("Delete node"));
+        JButton deleteNodeButton = new JButton("Delete node");
+        JButton addNodeButton = new JButton("Add node");
+        
+        //Delete node button 
+        ActionListener deleteNodeEvent = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Todo - Whatever you want to happen for deleting a node
+                System.out.println("Delete node");
+            }
+        };
+        deleteNodeButton.addActionListener(deleteNodeEvent);
+
+        //Add node button
+        ActionListener addNodeEvent = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Todo - Whatever you want to happen for adding a node
+                System.out.println("Add node");
+
+            }
+        };
+        addNodeButton.addActionListener(addNodeEvent);
+        
+        //Add buttons to panel
+        buttonPanel.add(deleteNodeButton);
+        buttonPanel.add(addNodeButton);
         this.add(buttonPanel, BorderLayout.SOUTH);
         
     } // constructor

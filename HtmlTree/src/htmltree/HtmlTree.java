@@ -1,39 +1,41 @@
 package htmltree;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-import java.io.IOException;
-import org.w3c.dom.Document;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTree;
-import javax.swing.JSplitPane;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.TextField;
 import java.awt.Toolkit;
-import java.awt.event.WindowEvent;
 import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
-import javax.swing.border.EmptyBorder;
+import java.util.*;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTree;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.CompoundBorder;
-import javax.swing.tree.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.*;
-import java.util.*;
+import javax.swing.tree.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 public class HtmlTree extends JPanel {
 
@@ -81,10 +83,18 @@ public class HtmlTree extends JPanel {
         splitPane.setContinuousLayout(true);
         splitPane.setDividerLocation(leftWidth);
         splitPane.setPreferredSize(new Dimension(windowWidth + 10, windowHeight + 10));
-
+        
         // Add GUI components
         this.setLayout(new BorderLayout());
         this.add("Center", splitPane);
+        
+        //Add buttons to splitPane
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+        buttonPanel.add(new JButton("Add node"));
+        buttonPanel.add(new JButton("Delete node"));
+        this.add(buttonPanel, BorderLayout.SOUTH);
+        
     } // constructor
 
     public static void main(String[] argv) throws Exception {
@@ -100,7 +110,7 @@ public class HtmlTree extends JPanel {
             //String documentString = buildDocumentString("http://w3.org/");
 
             InputStream stream = new ByteArrayInputStream(documentString.getBytes("UTF-8"));
-            document = builder.parse(new File("C:\\Users\\HALVORSENNS1\\Desktop\\fun.html"));
+            document = builder.parse(new File("fun.html"));
             //document = builder.parse(stream);
 
             makeFrame();

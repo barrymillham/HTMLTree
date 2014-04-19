@@ -101,7 +101,15 @@ public class HtmlTree extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Todo - Whatever you want to happen for deleting a node
-                System.out.println("Delete node");
+                DomToTreeModelAdapter model = (DomToTreeModelAdapter) tree.getModel();
+                
+                TreePath[] paths = tree.getSelectionPaths();
+                for (TreePath path : paths) {
+                    AdapterNode node = (AdapterNode) path.getLastPathComponent();
+                    if (node != null) {
+                        model.removeNode(node);
+                    }
+                }
             }
         };
         deleteNodeButton.addActionListener(deleteNodeEvent);
@@ -273,8 +281,8 @@ public class HtmlTree extends JPanel {
     }
 
     // This adapter converts the current Document (a DOM) into a JTree model. 
-    public class DomToTreeModelAdapter implements javax.swing.tree.TreeModel {
-
+        public class DomToTreeModelAdapter implements javax.swing.tree.TreeModel{
+        
         private Vector listenerList = new Vector();
 
         public Object getRoot() {
@@ -324,7 +332,10 @@ public class HtmlTree extends JPanel {
                 listenerList.removeElement(listener);
             }
         }
-
+        
+        public void removeNode(AdapterNode node){
+            //Remove node functionality
+        }
         
         
         

@@ -100,16 +100,18 @@ public class HtmlTree extends JPanel {
         ActionListener deleteNodeEvent = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Todo - Whatever you want to happen for deleting a node
+                // Deletes a node and its children.
                 DomToTreeModelAdapter model = (DomToTreeModelAdapter) tree.getModel();
                 
                 TreePath[] paths = tree.getSelectionPaths();
                 for (TreePath path : paths) {
                     AdapterNode node = (AdapterNode) path.getLastPathComponent();
                     if (node != null) {
-                        model.removeNode(node);
+                        node.removeAllChildren();
+                        node.removeFromParent();
                     }
                 }
+                //model.fireTreeNodesRemoved(null);
             }
         };
         deleteNodeButton.addActionListener(deleteNodeEvent);
@@ -332,12 +334,6 @@ public class HtmlTree extends JPanel {
                 listenerList.removeElement(listener);
             }
         }
-        
-        public void removeNode(AdapterNode node){
-            //Remove node functionality
-        }
-        
-        
         
         //CHRISTIAN USE THESE FUNCTIONS IF YOU WOULD LIKE
         public void fireTreeNodesChanged(TreeModelEvent e) {

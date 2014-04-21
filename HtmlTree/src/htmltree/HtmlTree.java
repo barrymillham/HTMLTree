@@ -64,7 +64,8 @@ public class HtmlTree extends JPanel {
 
         // Set up the tree
         tree = new JTree(new DomToTreeModelAdapter());
-
+        tree.setEditable(true);
+        
         // Iterate over the tree and make nodes visible
         // (Otherwise, the tree shows up fully collapsed)
         JScrollPane treeView = new JScrollPane(tree);
@@ -101,6 +102,7 @@ public class HtmlTree extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 // Deletes a node and its children.
+                System.out.println("Delete node");
                 DomToTreeModelAdapter model = (DomToTreeModelAdapter) tree.getModel();
                 
                 TreePath[] paths = tree.getSelectionPaths();
@@ -227,6 +229,8 @@ public class HtmlTree extends JPanel {
         public AdapterNode(org.w3c.dom.Node node) {
             domNode = node;
         }
+        
+        public org.w3c.dom.Node getDomNode() {return domNode;}
 
         // Return a string that identifies this node in the tree
         public String toString() {
@@ -283,7 +287,7 @@ public class HtmlTree extends JPanel {
     }
 
     // This adapter converts the current Document (a DOM) into a JTree model. 
-        public class DomToTreeModelAdapter implements javax.swing.tree.TreeModel{
+    public class DomToTreeModelAdapter implements javax.swing.tree.TreeModel {
         
         private Vector listenerList = new Vector();
 
@@ -321,6 +325,12 @@ public class HtmlTree extends JPanel {
         public void valueForPathChanged(TreePath path, Object newValue) {
             // We want to ensure the new value is really new,
             // adjust the model, and then fire a TreeNodesChanged event.
+            System.out.println("value for path changed - I don't think this is working yet");
+            AdapterNode node = (AdapterNode) path.getLastPathComponent();
+            
+            node.getDomNode().setNodeValue((String)newValue);
+            fireTreeNodesChanged(new TreeModelEvent(this, path));
+            
         }
 
         public void addTreeModelListener(TreeModelListener listener) {
@@ -337,7 +347,6 @@ public class HtmlTree extends JPanel {
         
         //CHRISTIAN USE THESE FUNCTIONS IF YOU WOULD LIKE
         public void fireTreeNodesChanged(TreeModelEvent e) {
-
             Enumeration listeners = listenerList.elements();
             while (listeners.hasMoreElements()) {
                 TreeModelListener listener = (TreeModelListener) listeners.nextElement();

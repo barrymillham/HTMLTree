@@ -96,6 +96,7 @@ public class HtmlTree extends JPanel {
         buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
         JButton deleteNodeButton = new JButton("Delete node");
         JButton addNodeButton = new JButton("Add node");
+        JButton generateButton = new JButton("Generate File");
         
         //Delete node button 
         ActionListener deleteNodeEvent = new ActionListener() {
@@ -129,9 +130,38 @@ public class HtmlTree extends JPanel {
         };
         addNodeButton.addActionListener(addNodeEvent);
         
+        ActionListener generateFileEvent = new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e){
+                System.out.println("generate File");
+                
+                try{
+                    File f = new File("newfile.html");
+                    if(f.createNewFile())
+                    {
+                        FileWriter fw = new FileWriter(f.getAbsoluteFile());
+                        BufferedWriter bw = new BufferedWriter(fw);
+                        bw.write("this file");
+                        bw.close();
+                        System.out.println("were good");
+                    }
+                    else
+                    {
+                        System.out.println("no good");
+                    }
+                } catch (IOException ex){
+                    ex.printStackTrace();
+                }
+                
+                
+            }
+        };
+        generateButton.addActionListener(generateFileEvent);
+        
         //Add buttons to panel
         buttonPanel.add(deleteNodeButton);
         buttonPanel.add(addNodeButton);
+        buttonPanel.add(generateButton);
         this.add(buttonPanel, BorderLayout.SOUTH);
         
     } // constructor

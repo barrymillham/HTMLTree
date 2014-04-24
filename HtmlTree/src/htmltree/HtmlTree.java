@@ -51,6 +51,7 @@ public class HtmlTree extends JPanel {
     static JTree tree;
     static JScrollPane htmlView;
     static HtmlTreePanel htmlPane;
+    static JFrame frame;
 
     static final String[] typeName
             = {"none", "Element", "Attr", "Text", "CDATA", "EntityRef", "Entity",
@@ -72,7 +73,7 @@ public class HtmlTree extends JPanel {
         // (Otherwise, the tree shows up fully collapsed)
         JScrollPane treeView = new JScrollPane(tree);
         treeView.setPreferredSize(new Dimension(leftWidth, windowHeight));
-
+        
         // Build right-side view
         htmlPane = new HtmlTreePanel(tree);
         TextField tf = new TextField("Courier New");
@@ -96,7 +97,7 @@ public class HtmlTree extends JPanel {
         //Button panel
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
-        JButton deleteNodeButton = new JButton("Delete node");
+        JButton deleteNodeButton = new JButton("Delete child nodes");
         JButton addNodeButton = new JButton("Add node");
         JButton generateButton = new JButton("Generate File");
         
@@ -113,10 +114,10 @@ public class HtmlTree extends JPanel {
                     AdapterNode node = (AdapterNode) path.getLastPathComponent();
                     if (node != null) {
                         node.removeAllChildren();
-                        node.removeFromParent();
                     }
                 }
-                //model.fireTreeNodesRemoved(null);
+                makeFrame();
+                
             }
         };
         deleteNodeButton.addActionListener(deleteNodeEvent);
@@ -228,16 +229,21 @@ public class HtmlTree extends JPanel {
         }
         return content;
     }
+    
 
-    public static void makeFrame() {
-        // Set up a GUI framework
-        JFrame frame = new JFrame("DOM Echo");
+     
+    public static void makeFrame() { // Set up a GUI framework
+        
+        pullThePlug(); //Removes old JFrame if one exists
+        frame = new JFrame("DOM Echo");
         frame.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
                 System.exit(0);
             }
         });
-
+        
+        frame.setExtendedState(frame.getExtendedState() | JFrame.MAXIMIZED_BOTH);
+        
         // Set up the tree, the views, and display it all
         final HtmlTree echoPanel = new HtmlTree();
         frame.getContentPane().add("Center", echoPanel);
@@ -246,8 +252,7 @@ public class HtmlTree extends JPanel {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int w = windowWidth + 10;
         int h = windowHeight + 10;
-        frame.setLocation((screenSize.width / 3) - (w / 2),
-                (screenSize.height / 2) - (h / 2));
+        frame.setLocation((screenSize.width / 3) - (w / 2), (screenSize.height / 2) - (h / 2));
         frame.setSize(w, h);
         
         htmlView.getHorizontalScrollBar().setValue(1000);
@@ -256,6 +261,10 @@ public class HtmlTree extends JPanel {
     }
   
 
+    public static void pullThePlug() {
+        if (frame != null) frame.setVisible(false);
+    }
+    
     // This class wraps a DOM node and returns the text we want to display in the tree. 
     public class AdapterNode extends DefaultMutableTreeNode {
 
@@ -268,13 +277,13 @@ public class HtmlTree extends JPanel {
         public org.w3c.dom.Node getDomNode() {return domNode;}
 
         // Return a string that identifies this node in the tree
+        @Override
         public String toString() {
             String s = typeName[domNode.getNodeType()];
             String nodeName = domNode.getNodeName();
 
             if (!nodeName.startsWith("#"))
                 s = (nodeName);
-            
 
             if (domNode.getNodeValue() != null) {
                 if (s.startsWith("ProcInstr")) {
@@ -294,17 +303,43 @@ public class HtmlTree extends JPanel {
             }
             return s;
         }
-
+        
+        
+        @Override
+        public void removeAllChildren() {       
+            for (int i = childCount()-1; i >= 0; i--)
+                remove(i);
+        }
+        
+        @Override
+        public void remove(int childIndex) {
+            AdapterNode child = child(childIndex);
+            child.parent().domNode.removeChild(child.domNode);
+            
+            //parent.remove(child);
+            //domNode.getChildNodes().item(childIndex)
+            //children.removeElementAt(childIndex);
+            child.setParent(null);        
+        }
+        
+        @Override
+        public void removeFromParent() {
+            AdapterNode parentNode = this.parent();
+            if (parentNode != null)
+                parentNode.remove(index(this));
+            
+        }
+        
+        
         public int index(AdapterNode child) {
             int count = childCount();
 
             for (int i = 0; i < count; i++) {
                 AdapterNode n = this.child(i);
 
-                if (child.domNode == n.domNode) {
+                if (child.domNode == n.domNode)
                     return i;
-                }
-
+            
             }
             return -1; // Should never get here.
         }
@@ -318,6 +353,11 @@ public class HtmlTree extends JPanel {
 
         public int childCount() {
             return domNode.getChildNodes().getLength();
+        }
+        
+        public AdapterNode parent() {
+            org.w3c.dom.Node node = domNode.getParentNode();
+            return new AdapterNode(node);
         }
     }
 
@@ -335,9 +375,9 @@ public class HtmlTree extends JPanel {
             // Return true for any node with no children
             AdapterNode node = (AdapterNode) aNode;
 
-            if (node.childCount() > 0) {
+            if (node.childCount() > 0)
                 return false;
-            }
+            
 
             return true;
         }
@@ -360,7 +400,7 @@ public class HtmlTree extends JPanel {
         public void valueForPathChanged(TreePath path, Object newValue) {
             // We want to ensure the new value is really new,
             // adjust the model, and then fire a TreeNodesChanged event.
-            System.out.println("value for path changed - I don't think this is working yet");
+            System.out.println("value for path changed");
             AdapterNode node = (AdapterNode) path.getLastPathComponent();
             
             node.getDomNode().setNodeValue((String)newValue);
@@ -382,6 +422,7 @@ public class HtmlTree extends JPanel {
         
         //CHRISTIAN USE THESE FUNCTIONS IF YOU WOULD LIKE
         public void fireTreeNodesChanged(TreeModelEvent e) {
+            System.out.println("Fire Tree Nodes Changed");
             Enumeration listeners = listenerList.elements();
             while (listeners.hasMoreElements()) {
                 TreeModelListener listener = (TreeModelListener) listeners.nextElement();
@@ -400,7 +441,7 @@ public class HtmlTree extends JPanel {
 
         public void fireTreeNodesRemoved(TreeModelEvent e) {
             Enumeration listeners = listenerList.elements();
-
+            System.out.println("Fire Tree Nodes Removed");
             while (listeners.hasMoreElements()) {
                 TreeModelListener listener = (TreeModelListener) listeners.nextElement();
                 listener.treeNodesRemoved(e);
@@ -409,7 +450,7 @@ public class HtmlTree extends JPanel {
 
         public void fireTreeStructureChanged(TreeModelEvent e) {
             Enumeration listeners = listenerList.elements();
-
+            System.out.println("Fire Tree Structure Changed");
             while (listeners.hasMoreElements()) {
                 TreeModelListener listener = (TreeModelListener) listeners.nextElement();
                 listener.treeStructureChanged(e);
@@ -441,9 +482,10 @@ public class HtmlTree extends JPanel {
         public HtmlTreePanel() {
         }
 
+        @Override
         public void paint(Graphics g) {
             super.paint(g);
-
+            System.out.println("Paint");
            
 
             AdapterNode theNode = null;
@@ -501,6 +543,8 @@ public class HtmlTree extends JPanel {
            //If this next line is missing, the tree will contain a bunch of blank Text: nodes (The ones that are displayed
            //in the left pane. For some reason, the parser likes to add blank Text nodes every time there is an open/close tag
            //with no text between the two tags.
+           
+           System.out.println("Paint all nodes!");
            if (parent.toString().equals("Text: ")) return;
             level++;
             for (int i = 0; i < parent.childCount(); i++) 
@@ -519,6 +563,7 @@ public class HtmlTree extends JPanel {
         }
 
         public void paintNode(Graphics g, int x, int y, String text, int parentX, int parentY) {
+            //System.out.println("Paint node!");
             int modifiedWidth = 0;
             if (text.length() > 15) 
                 modifiedWidth = nodeWidth + 12;

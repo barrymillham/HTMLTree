@@ -182,7 +182,7 @@ public class HtmlTree extends JPanel {
 
             InputStream stream = new ByteArrayInputStream(documentString.getBytes("UTF-8"));
             //document = builder.parse(new File("fun.html"));
-            document = builder.parse(new File("outputfile.txt"));
+            document = builder.parse(new File("outputfile.html"));
             //document = builder.parse(stream);
 
             makeFrame();
@@ -469,15 +469,20 @@ public class HtmlTree extends JPanel {
             
             for (int i = 0; i < 100; i++)
                 rowCount[i] = 0;
-            
-            countAllNodes(theRoot);
+            if (theRoot.childCount() == 1 && theRoot.child(0).toString().equals("Document"))
+                countAllNodes(theRoot.child(0));
+            else
+                countAllNodes(theRoot);
             
             //for (int i = 0; rowCount[i] > 0; i++) 
             //    System.out.println("row " + i + " has " + rowCount[i]);
        
             level = -1;
-            
-            paintAllNodes(g, theRoot);
+            System.out.println("theRoot.childCount == " + theRoot.childCount() + " and theRoot.child(0) = " + theRoot.child(0));
+            if (theRoot.childCount() == 1 && theRoot.child(0).toString().equals("Document"))
+                paintAllNodes(g, theRoot.child(0));
+            else
+                paintAllNodes(g, theRoot);
         }
         
         public void countAllNodes(AdapterNode root) {
@@ -501,6 +506,7 @@ public class HtmlTree extends JPanel {
             for (int i = 0; i < parent.childCount(); i++) 
                 paintAllNodes(g, parent.child(i));
             
+            //if (level == 0 && parent.toString().equal)
             if (level > 0)
              paintNode(g, rootX - (rowCount[level] / 2 - rowIndex[level]) * nodeHorizSpacing, rootY + level * nodeVertSpacing, parent.toString(),
                             rootX - (rowCount[level - 1] / 2 - rowIndex[level - 1]) * nodeHorizSpacing, rootY + (level - 1) * nodeVertSpacing);
@@ -585,14 +591,13 @@ public class HtmlTree extends JPanel {
             AdapterNode theRoot = (AdapterNode) tree.getModel().getRoot();
             countAllNodes(theRoot);
               
-            PrintWriter out = new PrintWriter(new FileWriter("outputfile.txt"));
+            PrintWriter out = new PrintWriter(new FileWriter("outputfile.html"));
             out.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
-            out.print(outputAllNodes(theRoot.child(0), ""));
+            out.print(outputAllNodes(theRoot, ""));
             level = -1;
 
             out.close();
 
-    
         }
         
         public String outputAllNodes(AdapterNode root, String currentStr)
@@ -606,7 +611,11 @@ public class HtmlTree extends JPanel {
             
             rowCount[level]++;
             level--;
-            System.out.println(root.toString());
+            System.out.println("level " + level + " " + root.toString());
+            
+            if (level == 0 && root.toString().equals("Document"))
+                return currentStr;
+            
             if (root.toString().startsWith("Text: "))
                 currentStr += root.toString().substring(6);
             else 

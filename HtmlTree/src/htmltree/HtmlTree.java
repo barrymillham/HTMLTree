@@ -196,9 +196,18 @@ public class HtmlTree extends JPanel {
     public static void main(String[] argv) throws Exception {
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        
+        //speed up parsing 
+        factory.setNamespaceAware(false);
+        factory.setValidating(false);
+        factory.setFeature("http://xml.org/sax/features/namespaces", false);
+        factory.setFeature("http://xml.org/sax/features/validation", false);
+        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false);
+        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
 
         try {
             DocumentBuilder builder = factory.newDocumentBuilder();
+
 
             //After searching for about a half hour, these are the only two websites I could find that work.
             //The website needs to be 100% valid strict XML, 0 mistakes, 0 warnings. Very few sites out there are.
@@ -207,8 +216,8 @@ public class HtmlTree extends JPanel {
 
             InputStream stream = new ByteArrayInputStream(documentString.getBytes("UTF-8"));
             //document = builder.parse(new File("fun.html"));
-            document = builder.parse(new File("outputfile.html"));
-            //document = builder.parse(stream);
+            //document = builder.parse(new File("outputfile.html"));
+            document = builder.parse(stream);
 
             makeFrame();
             //htmlPane.saveInfo();
@@ -535,21 +544,16 @@ public class HtmlTree extends JPanel {
             
             for (int i = 0; i < 100; i++)
                 rowCount[i] = 0;
-            if (theRoot.childCount() == 1 && theRoot.child(0).toString().equals("Document"))
-                countAllNodes(theRoot.child(0));
-            else
-                countAllNodes(theRoot);
+            
+            countAllNodes(theRoot);
             
             //for (int i = 0; rowCount[i] > 0; i++) 
             //    System.out.println("row " + i + " has " + rowCount[i]);
        
             level = -1;
             System.out.println("Paint all nodes!");
-            System.out.println("theRoot.childCount == " + theRoot.childCount() + " and theRoot.child(0) = " + theRoot.child(0));
-            if (theRoot.childCount() == 1 && theRoot.child(0).toString().equals("Document"))
-                paintAllNodes(g, theRoot.child(0));
-            else
-                paintAllNodes(g, theRoot);
+            
+            paintAllNodes(g, theRoot);
         }
         
         public void countAllNodes(AdapterNode root) {
@@ -574,7 +578,6 @@ public class HtmlTree extends JPanel {
             for (int i = 0; i < parent.childCount(); i++) 
                 paintAllNodes(g, parent.child(i));
             
-            //if (level == 0 && parent.toString().equal)
             if (level > 0)
              paintNode(g, rootX - (rowCount[level] / 2 - rowIndex[level]) * nodeHorizSpacing, rootY + level * nodeVertSpacing, parent.toString(),
                             rootX - (rowCount[level - 1] / 2 - rowIndex[level - 1]) * nodeHorizSpacing, rootY + (level - 1) * nodeVertSpacing);
@@ -662,6 +665,7 @@ public class HtmlTree extends JPanel {
               
             PrintWriter out = new PrintWriter(new FileWriter("outputfile.html"));
             out.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+            //out.println("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">");
             out.print(outputAllNodes(theRoot, ""));
             level = -1;
 
@@ -680,9 +684,8 @@ public class HtmlTree extends JPanel {
             
             rowCount[level]++;
             level--;
-            System.out.println("level " + level + " " + root.toString());
             
-            if (level == 0 && root.toString().equals("Document"))
+            if (root.toString().equals("Document"))
                 return currentStr;
             
             if (root.toString().startsWith("Text: "))

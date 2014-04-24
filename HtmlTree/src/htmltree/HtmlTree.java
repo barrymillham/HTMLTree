@@ -544,6 +544,7 @@ public class HtmlTree extends JPanel {
             //    System.out.println("row " + i + " has " + rowCount[i]);
        
             level = -1;
+            System.out.println("Paint all nodes!");
             System.out.println("theRoot.childCount == " + theRoot.childCount() + " and theRoot.child(0) = " + theRoot.child(0));
             if (theRoot.childCount() == 1 && theRoot.child(0).toString().equals("Document"))
                 paintAllNodes(g, theRoot.child(0));
@@ -568,7 +569,6 @@ public class HtmlTree extends JPanel {
            //in the left pane. For some reason, the parser likes to add blank Text nodes every time there is an open/close tag
            //with no text between the two tags.
            
-           System.out.println("Paint all nodes!");
            if (parent.toString().equals("Text: ")) return;
             level++;
             for (int i = 0; i < parent.childCount(); i++) 

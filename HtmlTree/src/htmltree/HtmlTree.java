@@ -101,7 +101,7 @@ public class HtmlTree extends JPanel {
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
         JButton deleteNodeButton = new JButton("Delete child nodes");
-        JButton addNodeButton = new JButton("Add node");
+        JButton addNodeButton = new JButton("Add leaf");
         JButton saveButton = new JButton("Save File");
         JButton loadButton = new JButton("Load File");
         

@@ -194,6 +194,7 @@ public class HtmlTree extends JPanel {
         buttonPanel.add(loadButton);
         this.add(buttonPanel, BorderLayout.SOUTH);
         
+        
     } // constructor
 
     public static void main(String[] argv) throws Exception {

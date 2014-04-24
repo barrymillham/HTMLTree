@@ -180,6 +180,7 @@ public class HtmlTree extends JPanel {
                     // I/O error
                     ioe.printStackTrace();
                 }
+                makeFrame();
             }
         };
         loadButton.addActionListener(loadFileEvent);
@@ -245,8 +246,8 @@ public class HtmlTree extends JPanel {
 
             InputStream stream = new ByteArrayInputStream(documentString.getBytes("UTF-8"));
             //document = builder.parse(new File("fun.html"));
-            document = builder.parse(new File("outputfile.html"));
-            //document = builder.parse(stream);
+            //document = builder.parse(new File("outputfile.html"));
+            document = builder.parse(stream);
             
             makeFrame();
 

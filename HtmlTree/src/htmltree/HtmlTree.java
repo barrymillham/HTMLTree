@@ -111,7 +111,6 @@ public class HtmlTree extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 // Deletes a node and its children.
                 System.out.println("Delete node");
-                DomToTreeModelAdapter model = (DomToTreeModelAdapter) tree.getModel();
                 
                 TreePath[] paths = tree.getSelectionPaths();
                 for (TreePath path : paths) {
@@ -132,7 +131,25 @@ public class HtmlTree extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 // Todo - Whatever you want to happen for adding a node
                 System.out.println("Add node");
-
+                
+                String newNodeName = (String)JOptionPane.showInputDialog(
+                    frame,
+                    "Enter name of new node:\n"
+                    + "(examples: div, span, ul, li, html, body)",
+                    "Add Node",
+                    JOptionPane.PLAIN_MESSAGE, null, null, "div");
+                
+                TreePath[] paths = tree.getSelectionPaths();
+                for (TreePath path : paths) {
+                    AdapterNode node = (AdapterNode) path.getLastPathComponent();
+                    
+                    if (node != null) {
+                        //null pointer exeption, probably in node.parent()? or something.
+                        document.getChildNodes().item(node.parent().index(node)).appendChild(document.createElement(newNodeName));
+                                //appendChild(document.createElement(newNodeName));
+                    }
+                }
+                makeFrame();
             }
         };
         addNodeButton.addActionListener(addNodeEvent);
@@ -217,13 +234,13 @@ public class HtmlTree extends JPanel {
         String theirInputOfWhichUrlToParse = (String)JOptionPane.showInputDialog(
             frame,
             "Enter a URL to fetch:\n"
-            + "(must contain well-formed XML)\n"
-            + "(these can be hard to find, an example is http://www.basement.com)",
+            + "(must contain strictly well-formed XML)\n"
+            + "(examples: http://basement.com, http://w3.org)",
             "Choose wisely",
             JOptionPane.PLAIN_MESSAGE,
             null,
             null,
-            "http://");
+            "http://basement.com");
         
         
             //After searching for about a half hour, these are the only two websites I could find that work.

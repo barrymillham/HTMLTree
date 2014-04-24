@@ -49,6 +49,8 @@ public class HtmlTree extends JPanel {
     static final int leftWidth = 200;
     static final int rightWidth = 1000;
     static final int windowWidth = leftWidth + rightWidth;
+    static int paneWidth = 1800;
+    static int paneHeight = 2000;
     static JTree tree;
     static JScrollPane htmlView;
     static HtmlTreePanel htmlPane;
@@ -79,7 +81,7 @@ public class HtmlTree extends JPanel {
         htmlPane = new HtmlTreePanel();
         TextField tf = new TextField("Courier New");
         
-        htmlPane.setPreferredSize(new Dimension(3000, 2000));
+        htmlPane.setPreferredSize(new Dimension(paneWidth, paneHeight));
         Font f = new Font("Courier New", Font.PLAIN, 15);
         htmlPane.setFont(f);
         htmlView = new JScrollPane(htmlPane);
@@ -334,7 +336,7 @@ public class HtmlTree extends JPanel {
         frame.setLocation((screenSize.width / 3) - (w / 2), (screenSize.height / 2) - (h / 2));
         frame.setSize(w, h);
         
-        htmlView.getHorizontalScrollBar().setValue(1000);
+        htmlView.getHorizontalScrollBar().setValue(htmlView.getHorizontalScrollBar().getMaximum() / 4);
         
         frame.setVisible(true);
     }
@@ -548,6 +550,7 @@ public class HtmlTree extends JPanel {
         int[] rowCount = new int[100];
         int level = -1;
         int[] rowIndex = new int[100];
+        boolean panelResizedYet = false;
 
 
         public HtmlTreePanel() {
@@ -558,6 +561,7 @@ public class HtmlTree extends JPanel {
             super.paint(g);
             System.out.println("Paint");
            
+            
 
             AdapterNode theNode = null;
             AdapterNode theRoot = (AdapterNode) tree.getModel().getRoot();
@@ -575,6 +579,9 @@ public class HtmlTree extends JPanel {
             
             countAllNodes(theRoot);
             
+            resizePanel();
+            
+            
             //for (int i = 0; rowCount[i] > 0; i++) 
             //    System.out.println("row " + i + " has " + rowCount[i]);
        
@@ -582,6 +589,33 @@ public class HtmlTree extends JPanel {
             System.out.println("Paint all nodes!");
             
             paintAllNodes(g, theRoot);
+        }
+        
+        public void resizePanel()
+        {
+            int biggestRow = 0;
+            for (int i = 0; i < 100; i++)
+                if (rowCount[i] > biggestRow)
+                    biggestRow = rowCount[i];
+            
+            if (biggestRow > 15)
+                paneWidth = biggestRow * nodeHorizSpacing + 200;
+            
+            int deepestRow = 0;
+            for (int i = 0; i < 100 && rowCount[i] != 0; i++)
+                deepestRow = i;
+            
+            if (deepestRow > 10)
+                paneHeight = deepestRow * nodeVertSpacing + 100;
+            
+            rootX = paneWidth / 2;
+            
+            htmlPane.setPreferredSize(new Dimension(paneWidth, paneHeight));
+            
+            if (!panelResizedYet)
+                //htmlView.getHorizontalScrollBar().setValue((int) (htmlView.getHorizontalScrollBar().getMaximum() * .3));
+                htmlView.getHorizontalScrollBar().setValue((int) (paneWidth * .45));
+            panelResizedYet = true;
         }
         
         public void countAllNodes(AdapterNode root) {

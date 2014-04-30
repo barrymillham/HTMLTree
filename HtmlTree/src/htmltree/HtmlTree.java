@@ -30,6 +30,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTree;
+import javax.swing.SwingUtilities;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -119,7 +120,7 @@ public class HtmlTree extends JPanel {
                         node.removeAllChildren();
                     }
                 }
-                makeFrame();
+                updateFrame();
                 
             }
         };
@@ -144,12 +145,19 @@ public class HtmlTree extends JPanel {
                     AdapterNode node = (AdapterNode) path.getLastPathComponent();
                     
                     if (node != null) {
-                        //null pointer exeption, probably in node.parent()? or something.
-                        document.getChildNodes().item(node.parent().index(node)).appendChild(document.createElement(newNodeName));
-                                //appendChild(document.createElement(newNodeName));
+                        AdapterNode parent = node.parent();
+                        if (parent == null) System.out.println("Parent is null.");
+                        else {
+                            int index = parent.index(node);
+                            System.out.println("Adding to index " + String.valueOf(index));
+                            System.out.println("document has " + String.valueOf(document.getChildNodes().getLength())+" children");
+                            node.domNode.appendChild(document.createElement(newNodeName));
+                            //problem is it's adding it to the document's index. it should be adding it to the parent node.
+                            //document.getChildNodes().item(index).appendChild(document.createElement(newNodeName));
+                        }
                     }
                 }
-                makeFrame();
+                updateFrame();
             }
         };
         addNodeButton.addActionListener(addNodeEvent);
@@ -199,7 +207,7 @@ public class HtmlTree extends JPanel {
                     // I/O error
                     ioe.printStackTrace();
                 }
-                makeFrame();
+                updateFrame();
             }
         };
         loadButton.addActionListener(loadFileEvent);
@@ -327,12 +335,14 @@ public class HtmlTree extends JPanel {
         }
         return content;
     }
-    
 
-     
+    public static void updateFrame() {
+         SwingUtilities.updateComponentTreeUI(frame);
+    }
+
     public static void makeFrame() { // Set up a GUI framework
         
-        pullThePlug(); //Removes old JFrame if one exists
+        //pullThePlug(); //Removes old JFrame if one exists
         frame = new JFrame("DOM Echo");
         frame.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
@@ -346,7 +356,7 @@ public class HtmlTree extends JPanel {
         final HtmlTree echoPanel = new HtmlTree();
         frame.getContentPane().add("Center", echoPanel);
         frame.pack();
-        
+       
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int w = windowWidth + 10;
@@ -431,8 +441,12 @@ public class HtmlTree extends JPanel {
         
         
         public int index(AdapterNode child) {
-            int count = childCount();
-
+            int count = 0;
+            try {
+            count = childCount();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(frame, "WARNING: Cannot add more than one node to Document.");
+            }
             for (int i = 0; i < count; i++) {
                 AdapterNode n = this.child(i);
 
@@ -577,7 +591,7 @@ public class HtmlTree extends JPanel {
         @Override
         public void paint(Graphics g) {
             super.paint(g);
-            System.out.println("Paint");
+            //System.out.println("Paint");
            
             
 
@@ -586,8 +600,6 @@ public class HtmlTree extends JPanel {
             
            //int dismal = ((AdapterNode)(tree.getModel().getRoot())).childCount();
            //System.out.println("dismal = " + dismal);
-
-           System.out.println(theRoot.child(0));
            
             for (int i = 0; i < 100; i++)
                 rowIndex[i] = 0;
@@ -604,7 +616,7 @@ public class HtmlTree extends JPanel {
             //    System.out.println("row " + i + " has " + rowCount[i]);
        
             level = -1;
-            System.out.println("Paint all nodes!");
+            //System.out.println("Paint all nodes!");
             
             paintAllNodes(g, theRoot);
         }
